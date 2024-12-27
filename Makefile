@@ -1,2 +1,2 @@
 all:
-	gcc -Wall maths.c -o maths
+	gcc -Wall maths.c -o maths -lm
