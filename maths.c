@@ -34,6 +34,12 @@ void set_answer(char* buffer, const char* fmt, int value) {
 	}
 }	
 
+void swap(int* a, int* b) {
+	int* tmp = a;
+	a = b;
+	b = tmp;
+}
+
 int main(void) {
 
 	srand(time(NULL));
@@ -46,28 +52,35 @@ int main(void) {
 
 	while (1) {
 		operation = rand() % 4;
-		a = rand_int(3); 
-		b = rand_int(2); 
 	
 		switch(operation) {
 			case ADD:
+				a = rand_int(3); 
+				b = rand_int(3); 
 				symbol = '+';
 				set_answer(answer, "%i", a+b);
 				break;	
 			case SUBTRACT:
+				a = rand_int(3); 
+				b = rand_int(3);
+			        if (b > a) {
+					swap(&a, &b);
+				}	
 				symbol = '-';
 				set_answer(answer, "%i", a-b);
 				break;	
 			case MULTIPLY:
+				a = rand_int(3); 
+				b = rand_int(2); 
 				symbol = '*';
 				set_answer(answer, "%i", a*b);
 				break;	
 			case DIVIDE:
 				symbol = '/';
-				while (a % b != 0) {
+				do { 
 					a = rand_int(3); 
 					b = rand_int(2); 
-				}
+				} while (a % b != 0);
 				set_answer(answer, "%i", a/b);
 				break;	
 		}	
