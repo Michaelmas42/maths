@@ -4,6 +4,7 @@
 #include <math.h>
 
 #define BUFSIZE 256
+#define DIV_TRIES 1000000
 
 #define	ADD 0
 #define	SUBTRACT 1
@@ -27,7 +28,8 @@ void set_answer(char* buffer, const char* fmt, int value) {
 	int n = snprintf(buffer, BUFSIZE, fmt, value);
 	if (n < 0) {
 		fprintf(stderr, "snprintf error");
-		exit(1);
+		exit(EXIT_FAILURE);
+
 	}
 	if (n >= BUFSIZE) {
 		fprintf(stderr, "answer truncated");
@@ -35,13 +37,36 @@ void set_answer(char* buffer, const char* fmt, int value) {
 }	
 
 void swap(int* a, int* b) {
-	int* tmp = a;
-	a = b;
-	b = tmp;
+	int tmp = *a;
+	*a = *b;
+	*b = tmp;
 }
 
-int main(void) {
+int main(int argc, char* argv[]) {
 
+	int a_digits, b_digits;
+	if (argc == 1) {
+		a_digits = 3;
+		b_digits = 2;
+	}
+	else if (argc == 2) {
+		a_digits = atoi(argv[1]);
+		b_digits = atoi(argv[1]);
+	}
+	else if (argc == 3) {
+		a_digits = atoi(argv[1]);
+		b_digits = atoi(argv[2]);
+	}
+	else {
+		fprintf(stderr, "Usage: maths [a][b]\n");
+		exit(EXIT_FAILURE);	
+	}
+
+	if (a_digits < 1 || b_digits < 1) {
+		fprintf(stderr, "Arguments must be integers greater than 0\n");
+		exit(EXIT_FAILURE);	
+	}
+	
 	srand(time(NULL));
 	char* pattern = "%i %c %i = ";
 
@@ -52,17 +77,15 @@ int main(void) {
 
 	while (1) {
 		operation = rand() % 4;
+		a = rand_int(a_digits); 
+		b = rand_int(b_digits); 
 	
 		switch(operation) {
 			case ADD:
-				a = rand_int(3); 
-				b = rand_int(3); 
 				symbol = '+';
 				set_answer(answer, "%i", a+b);
 				break;	
 			case SUBTRACT:
-				a = rand_int(3); 
-				b = rand_int(3);
 			        if (b > a) {
 					swap(&a, &b);
 				}	
@@ -70,17 +93,24 @@ int main(void) {
 				set_answer(answer, "%i", a-b);
 				break;	
 			case MULTIPLY:
-				a = rand_int(3); 
-				b = rand_int(2); 
 				symbol = '*';
 				set_answer(answer, "%i", a*b);
 				break;	
 			case DIVIDE:
 				symbol = '/';
-				do { 
-					a = rand_int(3); 
-					b = rand_int(2); 
-				} while (a % b != 0);
+				int i = 0;
+				while (a % b != 0) { 
+					a = rand_int(a_digits); 
+					b = rand_int(b_digits); 
+					if (b > a) {
+						swap(&a, &b);
+					}
+
+					if (++i >= DIV_TRIES) {
+						fprintf(stderr, "Division problem generation error\n");
+						exit(EXIT_FAILURE);	
+					}	
+				} 
 				set_answer(answer, "%i", a/b);
 				break;	
 		}	
