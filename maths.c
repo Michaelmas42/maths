@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <curses.h>
 
 #define BUFSIZE 256
 #define DIV_TRIES 1000000
@@ -11,10 +12,22 @@
 #define	MULTIPLY 2
 #define	DIVIDE 3
 
+#define ESC_KEY 27
+
+int die(const char* s) {
+	endwin();
+	fprintf(stderr, s);
+	exit(EXIT_FAILURE);	
+
+}
 void wait() {
 	char c;
 	do {
-		c = getchar();
+		c = getch();
+		if (c == ESC_KEY) {
+			endwin();
+			exit(EXIT_SUCCESS);
+		}
 	} while (c != '\n');
 }	
 
@@ -27,12 +40,10 @@ int rand_int(int digits) {
 void set_answer(char* buffer, const char* fmt, int value) {
 	int n = snprintf(buffer, BUFSIZE, fmt, value);
 	if (n < 0) {
-		fprintf(stderr, "snprintf error");
-		exit(EXIT_FAILURE);
-
+		die("snprintf error\n");
 	}
 	if (n >= BUFSIZE) {
-		fprintf(stderr, "answer truncated");
+		fprintf(stderr, "answer truncated\n");
 	}
 }	
 
@@ -42,7 +53,11 @@ void swap(int* a, int* b) {
 	*b = tmp;
 }
 
+
 int main(int argc, char* argv[]) {
+	initscr(); 
+	cbreak(); 
+	noecho();
 
 	int a_digits, b_digits;
 	if (argc == 1) {
@@ -58,15 +73,14 @@ int main(int argc, char* argv[]) {
 		b_digits = atoi(argv[2]);
 	}
 	else {
-		fprintf(stderr, "Usage: maths [a][b]\n");
-		exit(EXIT_FAILURE);	
+		die("Usage: maths [a][b]\n");
 	}
 
 	if (a_digits < 1 || b_digits < 1) {
-		fprintf(stderr, "Arguments must be integers greater than 0\n");
-		exit(EXIT_FAILURE);	
+		die("Arguments must be integers greater than 0\n");
 	}
-	
+
+
 	srand(time(NULL));
 	char* pattern = "%i %c %i = ";
 
@@ -107,16 +121,20 @@ int main(int argc, char* argv[]) {
 					}
 
 					if (++i >= DIV_TRIES) {
-						fprintf(stderr, "Division problem generation error\n");
-						exit(EXIT_FAILURE);	
+						die("Division problem generation error\n");
 					}	
 				} 
 				set_answer(answer, "%i", a/b);
 				break;	
 		}	
-		printf(pattern, a, symbol, b);
+		move(0,0);
+		printw("Press ENTER for the solution or a new problem, ESC to exit.\n");	
+		printw(pattern, a, symbol, b);
+		refresh();
 		wait();
-		printf("%s\n", answer);
+		printw("%s\n", answer);
+		refresh();
 		wait();
+		erase();
 	}
 }
